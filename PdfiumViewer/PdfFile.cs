@@ -186,9 +186,21 @@ namespace PdfiumViewer
             if (bookmark == IntPtr.Zero)
                 return;
 
+            var ptrs = new List<IntPtr>();
+
             bookmarks.Add(LoadBookmark(bookmark));
+
             while ((bookmark = NativeMethods.FPDF_BookmarkGetNextSibling(_document, bookmark)) != IntPtr.Zero)
+            {
+                if (ptrs.Contains(bookmark))
+                {
+                    // avoid infinite bookmark loop problem
+                    break;
+                }
+
+                ptrs.Add(bookmark);
                 bookmarks.Add(LoadBookmark(bookmark));
+            }
         }
 
         private PdfBookmark LoadBookmark(IntPtr bookmark)
