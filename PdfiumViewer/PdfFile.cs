@@ -91,7 +91,7 @@ namespace PdfiumViewer
                     string uri = null;
 
                     if (destination != IntPtr.Zero)
-                        target = (int)NativeMethods.FPDFDest_GetPageIndex(_document, destination);
+                        target = (int)NativeMethods.FPDFDest_GetDestPageIndex(_document, destination);
 
                     var action = NativeMethods.FPDFLink_GetAction(annotation);
                     if (action != IntPtr.Zero)
@@ -239,7 +239,7 @@ namespace PdfiumViewer
         {
             IntPtr dest = NativeMethods.FPDF_BookmarkGetDest(_document, bookmark);
             if (dest != IntPtr.Zero)
-                return NativeMethods.FPDFDest_GetPageIndex(_document, dest);
+                return NativeMethods.FPDFDest_GetDestPageIndex(_document, dest);
 
             return 0;
         }
@@ -522,7 +522,7 @@ namespace PdfiumViewer
             }
         }
 
-        public PdfInformation GetInformation()
+        public PdfInformation GetPdfInformation()
         {
             var pdfInfo = new PdfInformation();
 
@@ -538,7 +538,7 @@ namespace PdfiumViewer
             return pdfInfo;
         }
 
-        private string GetMetaText(string tag)
+        public string GetMetaText(string tag)
         {
             // Length includes a trailing \0.
 

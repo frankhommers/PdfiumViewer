@@ -572,7 +572,7 @@ namespace PdfiumViewer
         /// <returns>The PDF metadata.</returns>
         public PdfInformation GetInformation()
         {
-            return _file.GetInformation();
+            return _file.GetPdfInformation();
         }
 
         /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
