@@ -3,7 +3,7 @@
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net461</TargetFramework>
+    <TargetFramework>net472</TargetFramework>
     <AssemblyTitle>PdfViewer.Demo</AssemblyTitle>
     <Company>Pieter van Ginkel</Company>
     <Product>PdfViewer.Demo</Product>
