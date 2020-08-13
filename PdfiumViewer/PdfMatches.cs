@@ -7,22 +7,22 @@ using System.Text;
 
 namespace PdfiumViewer
 {
-    public class PdfMatches
+  public class PdfMatches
+  {
+    public int StartPage { get; private set; }
+
+    public int EndPage { get; private set; }
+
+    public IList<PdfMatch> Items { get; private set; }
+
+    public PdfMatches(int startPage, int endPage, IList<PdfMatch> matches)
     {
-        public int StartPage { get; private set; }
+      if (matches == null)
+        throw new ArgumentNullException("matches");
 
-        public int EndPage { get; private set; }
-
-        public IList<PdfMatch> Items { get; private set; }
-
-        public PdfMatches(int startPage, int endPage, IList<PdfMatch> matches)
-        {
-            if (matches == null)
-                throw new ArgumentNullException("matches");
-
-            StartPage = startPage;
-            EndPage = endPage;
-            Items = new ReadOnlyCollection<PdfMatch>(matches);
-        }
+      StartPage = startPage;
+      EndPage = endPage;
+      Items = new ReadOnlyCollection<PdfMatch>(matches);
     }
+  }
 }

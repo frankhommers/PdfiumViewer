@@ -4,9 +4,9 @@ using System.Text;
 
 namespace PdfiumViewer
 {
-    public enum PdfViewerCursorMode
-    {
-        Pan,
-        TextSelection
-    }
+  public enum PdfViewerCursorMode
+  {
+    Pan,
+    TextSelection
+  }
 }

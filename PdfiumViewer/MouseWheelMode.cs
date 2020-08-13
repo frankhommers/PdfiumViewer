@@ -6,10 +6,10 @@ using System.Text;
 
 namespace PdfiumViewer
 {
-    public enum MouseWheelMode
-    {
-        PanAndZoom,
-        Pan,
-        Zoom
-    }
+  public enum MouseWheelMode
+  {
+    PanAndZoom,
+    Pan,
+    Zoom
+  }
 }

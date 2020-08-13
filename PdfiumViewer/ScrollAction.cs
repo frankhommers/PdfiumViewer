@@ -6,13 +6,13 @@ using System.Text;
 
 namespace PdfiumViewer
 {
-    public enum ScrollAction
-    {
-        LineUp,
-        LineDown,
-        PageUp,
-        PageDown,
-        Home,
-        End
-    }
+  public enum ScrollAction
+  {
+    LineUp,
+    LineDown,
+    PageUp,
+    PageDown,
+    Home,
+    End
+  }
 }

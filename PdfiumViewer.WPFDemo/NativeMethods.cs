@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 
 namespace PdfiumViewer.WPFDemo
 {
-    internal static class NativeMethods
-    {
-        [DllImport("gdi32.dll")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool DeleteObject([In] IntPtr hObject);
-    }
+  internal static class NativeMethods
+  {
+    [DllImport("gdi32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool DeleteObject([In] IntPtr hObject);
+  }
 }

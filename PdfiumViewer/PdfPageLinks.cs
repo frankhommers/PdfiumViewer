@@ -5,26 +5,26 @@ using System.Text;
 
 namespace PdfiumViewer
 {
+  /// <summary>
+  /// Describes all links on a page.
+  /// </summary>
+  public class PdfPageLinks
+  {
     /// <summary>
-    /// Describes all links on a page.
+    /// All links of the page.
     /// </summary>
-    public class PdfPageLinks
+    public IList<PdfPageLink> Links { get; private set; }
+
+    /// <summary>
+    /// Creates a new instance of the PdfPageLinks class.
+    /// </summary>
+    /// <param name="links">The links on the PDF page.</param>
+    public PdfPageLinks(IList<PdfPageLink> links)
     {
-        /// <summary>
-        /// All links of the page.
-        /// </summary>
-        public IList<PdfPageLink> Links { get; private set; }
+      if (links == null)
+        throw new ArgumentNullException("links");
 
-        /// <summary>
-        /// Creates a new instance of the PdfPageLinks class.
-        /// </summary>
-        /// <param name="links">The links on the PDF page.</param>
-        public PdfPageLinks(IList<PdfPageLink> links)
-        {
-            if (links == null)
-                throw new ArgumentNullException("links");
-
-            Links = new ReadOnlyCollection<PdfPageLink>(links);
-        }
+      Links = new ReadOnlyCollection<PdfPageLink>(links);
     }
+  }
 }

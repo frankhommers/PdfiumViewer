@@ -4,20 +4,20 @@ using System.Text;
 
 namespace PdfiumViewer
 {
-    public class PdfiumResolver
+  public class PdfiumResolver
+  {
+    public static event PdfiumResolveEventHandler Resolve;
+
+    private static void OnResolve(PdfiumResolveEventArgs e)
     {
-        public static event PdfiumResolveEventHandler Resolve;
-
-        private static void OnResolve(PdfiumResolveEventArgs e)
-        {
-            Resolve?.Invoke(null, e);
-        }
-
-        internal static string GetPdfiumFileName()
-        {
-            var e = new PdfiumResolveEventArgs();
-            OnResolve(e);
-            return e.PdfiumFileName;
-        }
+      Resolve?.Invoke(null, e);
     }
+
+    internal static string GetPdfiumFileName()
+    {
+      var e = new PdfiumResolveEventArgs();
+      OnResolve(e);
+      return e.PdfiumFileName;
+    }
+  }
 }
