@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Text;
 using System.Windows.Forms;
 
 namespace PdfiumViewer.Demo
@@ -42,7 +37,7 @@ namespace PdfiumViewer.Demo
       }
       else
       {
-        var settings = new PdfPrintSettings(
+        PdfPrintSettings settings = new PdfPrintSettings(
           _viewer.DefaultPrintMode,
           new PdfPrintMultiplePages(
             horizontal,
@@ -52,7 +47,7 @@ namespace PdfiumViewer.Demo
           )
         );
 
-        using (var form = new PrintPreviewDialog())
+        using (PrintPreviewDialog form = new PrintPreviewDialog())
         {
           form.Document = _viewer.Document.CreatePrintDocument(settings);
           form.ShowDialog(this);

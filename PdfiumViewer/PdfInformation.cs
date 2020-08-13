@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 #pragma warning disable 1591
 
 namespace PdfiumViewer
 {
   /// <summary>
-  /// Contains text from metadata of the document.
+  ///   Contains text from metadata of the document.
   /// </summary>
   public class PdfInformation
   {

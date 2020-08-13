@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Drawing;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
@@ -56,19 +57,19 @@ namespace PdfiumViewer.Demo
       }
     }
 
-    void Renderer_ZoomChanged(object sender, EventArgs e)
+    private void Renderer_ZoomChanged(object sender, EventArgs e)
     {
       _zoom.Text = pdfViewer1.Renderer.Zoom.ToString();
     }
 
-    void Renderer_DisplayRectangleChanged(object sender, EventArgs e)
+    private void Renderer_DisplayRectangleChanged(object sender, EventArgs e)
     {
       _page.Text = (pdfViewer1.Renderer.Page + 1).ToString();
     }
 
     private void MainForm_Shown(object sender, EventArgs e)
     {
-      var args = Environment.GetCommandLineArgs();
+      string[] args = Environment.GetCommandLineArgs();
 
       if (args.Length > 1)
       {
@@ -100,7 +101,7 @@ namespace PdfiumViewer.Demo
 
     private void OpenFile()
     {
-      using (var form = new OpenFileDialog())
+      using (OpenFileDialog form = new OpenFileDialog())
       {
         form.Filter = "PDF Files (*.pdf)|*.pdf|All Files (*.*)|*.*";
         form.RestoreDirectory = true;
@@ -133,7 +134,7 @@ namespace PdfiumViewer.Demo
       int dpiX;
       int dpiY;
 
-      using (var form = new ExportBitmapsForm())
+      using (ExportBitmapsForm form = new ExportBitmapsForm())
       {
         if (form.ShowDialog() != DialogResult.OK)
           return;
@@ -144,7 +145,7 @@ namespace PdfiumViewer.Demo
 
       string path;
 
-      using (var form = new FolderBrowserDialog())
+      using (FolderBrowserDialog form = new FolderBrowserDialog())
       {
         if (form.ShowDialog(this) != DialogResult.OK)
           return;
@@ -152,16 +153,14 @@ namespace PdfiumViewer.Demo
         path = form.SelectedPath;
       }
 
-      var document = pdfViewer1.Document;
+      IPdfDocument document = pdfViewer1.Document;
 
       for (int i = 0; i < document.PageCount; i++)
-      {
-        using (var image = document.Render(i, (int) document.PageSizes[i].Width, (int) document.PageSizes[i].Height,
+        using (Image image = document.Render(i, (int) document.PageSizes[i].Width, (int) document.PageSizes[i].Height,
           dpiX, dpiY, false))
         {
           image.Save(Path.Combine(path, "Page " + i + ".png"));
         }
-      }
     }
 
     private void toolStripButton1_Click_1(object sender, EventArgs e)
@@ -192,7 +191,7 @@ namespace PdfiumViewer.Demo
 
     private void printPreviewToolStripMenuItem_Click(object sender, EventArgs e)
     {
-      using (var form = new PrintPreviewDialog())
+      using (PrintPreviewDialog form = new PrintPreviewDialog())
       {
         form.Document = pdfViewer1.Document.CreatePrintDocument(pdfViewer1.DefaultPrintMode);
         form.ShowDialog(this);
@@ -282,7 +281,7 @@ namespace PdfiumViewer.Demo
       // so we fake it by reloading the document into the renderer.
 
       int page = pdfViewer1.Renderer.Page;
-      var document = pdfViewer1.Document;
+      IPdfDocument document = pdfViewer1.Document;
       pdfViewer1.Document = null;
       document.DeletePage(page);
       pdfViewer1.Document = document;
@@ -315,7 +314,7 @@ namespace PdfiumViewer.Demo
       // so we fake it by reloading the document into the renderer.
 
       int page = pdfViewer1.Renderer.Page;
-      var document = pdfViewer1.Document;
+      IPdfDocument document = pdfViewer1.Document;
       pdfViewer1.Document = null;
       document.RotatePage(page, rotate);
       pdfViewer1.Document = document;
@@ -324,12 +323,9 @@ namespace PdfiumViewer.Demo
 
     private void showRangeOfPagesToolStripMenuItem_Click(object sender, EventArgs e)
     {
-      using (var form = new PageRangeForm(pdfViewer1.Document))
+      using (PageRangeForm form = new PageRangeForm(pdfViewer1.Document))
       {
-        if (form.ShowDialog(this) == DialogResult.OK)
-        {
-          pdfViewer1.Document = form.Document;
-        }
+        if (form.ShowDialog(this) == DialogResult.OK) pdfViewer1.Document = form.Document;
       }
     }
 
@@ -373,7 +369,7 @@ namespace PdfiumViewer.Demo
 
     private void printMultiplePagesToolStripMenuItem_Click(object sender, EventArgs e)
     {
-      using (var form = new PrintMultiplePagesForm(pdfViewer1))
+      using (PrintMultiplePagesForm form = new PrintMultiplePagesForm(pdfViewer1))
       {
         form.ShowDialog(this);
       }

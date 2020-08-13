@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace PdfiumViewer
 {
@@ -12,15 +10,14 @@ namespace PdfiumViewer
       if (stream == null)
         throw new ArgumentNullException("stream");
 
-      var memoryStream = stream as MemoryStream;
+      MemoryStream memoryStream = stream as MemoryStream;
 
       if (memoryStream != null)
         return memoryStream.ToArray();
 
       if (stream.CanSeek)
         return ReadBytesFast(stream);
-      else
-        return ReadBytesSlow(stream);
+      return ReadBytesSlow(stream);
     }
 
     private static byte[] ReadBytesFast(Stream stream)
@@ -46,7 +43,7 @@ namespace PdfiumViewer
 
     private static byte[] ReadBytesSlow(Stream stream)
     {
-      using (var memoryStream = new MemoryStream())
+      using (MemoryStream memoryStream = new MemoryStream())
       {
         CopyStream(stream, memoryStream);
 
@@ -56,12 +53,12 @@ namespace PdfiumViewer
 
     public static void CopyStream(Stream from, Stream to)
     {
-      if (@from == null)
+      if (from == null)
         throw new ArgumentNullException("from");
       if (to == null)
         throw new ArgumentNullException("to");
 
-      var buffer = new byte[4096];
+      byte[] buffer = new byte[4096];
 
       while (true)
       {

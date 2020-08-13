@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.IO;
 using System.Threading;
 using NUnit.Framework;
 
@@ -10,42 +9,23 @@ namespace PdfiumViewer.Test
   [TestFixture]
   public class MultiAppDomainFixture
   {
-    [Test]
-    public void MultipleAppDomains()
-    {
-      RunThreads();
-    }
-
-    [Test]
-    public void MultipleAppDomainsAndCurrent()
-    {
-      using (var runner = new Runner())
-      {
-        runner.Run();
-
-        RunThreads();
-      }
-    }
-
     private void RunThreads()
     {
       const int scripts = 10;
       const int iterations = 20;
-      var threads = new List<Thread>();
+      List<Thread> threads = new List<Thread>();
 
       for (int i = 0; i < scripts; i++)
       {
-        var thread = new Thread(() =>
+        Thread thread = new Thread(() =>
         {
           try
           {
             for (int j = 0; j < iterations; j++)
-            {
-              using (var runner = new Runner())
+              using (Runner runner = new Runner())
               {
                 runner.Run();
               }
-            }
           }
           catch (Exception ex)
           {
@@ -58,36 +38,31 @@ namespace PdfiumViewer.Test
         thread.Start();
       }
 
-      foreach (var thread in threads)
-      {
-        thread.Join();
-      }
+      foreach (Thread thread in threads) thread.Join();
     }
 
     private class Script : MarshalByRefObject
     {
       public void Run()
       {
-        using (var stream = typeof(MultiAppDomainFixture).Assembly.GetManifestResourceStream(
+        using (Stream stream = typeof(MultiAppDomainFixture).Assembly.GetManifestResourceStream(
           typeof(MultiAppDomainFixture).Namespace + ".Example" + (new Random().Next(2) + 1) + ".pdf"
         ))
         {
-          var document = PdfDocument.Load(stream);
+          PdfDocument document = PdfDocument.Load(stream);
 
           for (int i = 0; i < document.PageCount; i++)
-          {
             using (document.Render(i, 96, 96, false))
             {
             }
-          }
         }
       }
     }
 
     private class Runner : IDisposable
     {
-      private bool _disposed;
       private AppDomain _appDomain;
+      private bool _disposed;
 
       public Runner()
       {
@@ -102,16 +77,6 @@ namespace PdfiumViewer.Test
         );
       }
 
-      public void Run()
-      {
-        var script = (Script) _appDomain.CreateInstanceAndUnwrap(
-          typeof(Script).Assembly.FullName,
-          typeof(Script).FullName
-        );
-
-        script.Run();
-      }
-
       public void Dispose()
       {
         if (!_disposed)
@@ -124,6 +89,33 @@ namespace PdfiumViewer.Test
 
           _disposed = true;
         }
+      }
+
+      public void Run()
+      {
+        Script script = (Script) _appDomain.CreateInstanceAndUnwrap(
+          typeof(Script).Assembly.FullName,
+          typeof(Script).FullName
+        );
+
+        script.Run();
+      }
+    }
+
+    [Test]
+    public void MultipleAppDomains()
+    {
+      RunThreads();
+    }
+
+    [Test]
+    public void MultipleAppDomainsAndCurrent()
+    {
+      using (Runner runner = new Runner())
+      {
+        runner.Run();
+
+        RunThreads();
       }
     }
   }

@@ -3,34 +3,14 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Printing;
 using System.IO;
-using System.Text;
 
 namespace PdfiumViewer.Demo
 {
   public class PdfRangeDocument : IPdfDocument
   {
-    public static PdfRangeDocument FromDocument(IPdfDocument document, int startPage, int endPage)
-    {
-      if (document == null)
-        throw new ArgumentNullException(nameof(document));
-
-      if (endPage < startPage)
-        throw new ArgumentException("End page cannot be less than start page");
-      if (startPage < 0)
-        throw new ArgumentException("Start page cannot be less than zero");
-      if (endPage >= document.PageCount)
-        throw new ArgumentException("End page cannot be more than the number of pages in the document");
-
-      return new PdfRangeDocument(
-        document,
-        startPage,
-        endPage
-      );
-    }
-
     private readonly IPdfDocument _document;
-    private readonly int _startPage;
     private readonly int _endPage;
+    private readonly int _startPage;
     private PdfBookmarkCollection _bookmarks;
     private IList<SizeF> _sizes;
 
@@ -56,34 +36,6 @@ namespace PdfiumViewer.Demo
       }
     }
 
-    private PdfBookmarkCollection TranslateBookmarks(PdfBookmarkCollection bookmarks)
-    {
-      var result = new PdfBookmarkCollection();
-
-      TranslateBookmarks(result, bookmarks);
-
-      return result;
-    }
-
-    private void TranslateBookmarks(PdfBookmarkCollection result, PdfBookmarkCollection bookmarks)
-    {
-      foreach (var bookmark in bookmarks)
-      {
-        if (bookmark.PageIndex >= _startPage && bookmark.PageIndex <= _endPage)
-        {
-          var resultBookmark = new PdfBookmark
-          {
-            PageIndex = bookmark.PageIndex - _startPage,
-            Title = bookmark.Title
-          };
-
-          TranslateBookmarks(resultBookmark.Children, bookmark.Children);
-
-          result.Add(resultBookmark);
-        }
-      }
-    }
-
     public IList<SizeF> PageSizes
     {
       get
@@ -92,18 +44,6 @@ namespace PdfiumViewer.Demo
           _sizes = TranslateSizes(_document.PageSizes);
         return _sizes;
       }
-    }
-
-    private IList<SizeF> TranslateSizes(IList<SizeF> pageSizes)
-    {
-      var result = new List<SizeF>();
-
-      for (int i = _startPage; i <= _endPage; i++)
-      {
-        result.Add(pageSizes[i]);
-      }
-
-      return result;
     }
 
     public void Render(int page, Graphics graphics, float dpiX, float dpiY, Rectangle bounds, bool forPrinting)
@@ -167,29 +107,6 @@ namespace PdfiumViewer.Demo
       return TranslateMatches(_document.Search(text, matchCase, wholeWord, startPage, endPage));
     }
 
-    private PdfMatches TranslateMatches(PdfMatches search)
-    {
-      if (search == null)
-        return null;
-
-      var matches = new List<PdfMatch>();
-
-      foreach (var match in search.Items)
-      {
-        matches.Add(new PdfMatch(
-          match.Text,
-          new PdfTextSpan(match.TextSpan.Page + _startPage, match.TextSpan.Offset, match.TextSpan.Length),
-          match.Page + _startPage
-        ));
-      }
-
-      return new PdfMatches(
-        search.StartPage + _startPage,
-        search.EndPage + _startPage,
-        matches
-      );
-    }
-
     public PrintDocument CreatePrintDocument()
     {
       return _document.CreatePrintDocument();
@@ -208,25 +125,6 @@ namespace PdfiumViewer.Demo
     public PdfPageLinks GetPageLinks(int pageNumber, Size pageSize)
     {
       return TranslateLinks(_document.GetPageLinks(pageNumber + _startPage, pageSize));
-    }
-
-    private PdfPageLinks TranslateLinks(PdfPageLinks pageLinks)
-    {
-      if (pageLinks == null)
-        return null;
-
-      var links = new List<PdfPageLink>();
-
-      foreach (var link in pageLinks.Links)
-      {
-        links.Add(new PdfPageLink(
-          link.Bounds,
-          link.TargetPage + _startPage,
-          link.Uri
-        ));
-      }
-
-      return new PdfPageLinks(links);
     }
 
     public void DeletePage(int pageNumber)
@@ -256,15 +154,13 @@ namespace PdfiumViewer.Demo
 
     public IList<PdfRectangle> GetTextBounds(PdfTextSpan textSpan)
     {
-      var result = new List<PdfRectangle>();
+      List<PdfRectangle> result = new List<PdfRectangle>();
 
-      foreach (var rectangle in _document.GetTextBounds(textSpan))
-      {
+      foreach (PdfRectangle rectangle in _document.GetTextBounds(textSpan))
         result.Add(new PdfRectangle(
           rectangle.Page + _startPage,
           rectangle.Bounds
         ));
-      }
 
       return result;
     }
@@ -309,16 +205,108 @@ namespace PdfiumViewer.Demo
       return _document.GetTextRectangles(page, startIndex, count);
     }
 
+    public void Dispose()
+    {
+      _document.Dispose();
+    }
+
+    public static PdfRangeDocument FromDocument(IPdfDocument document, int startPage, int endPage)
+    {
+      if (document == null)
+        throw new ArgumentNullException(nameof(document));
+
+      if (endPage < startPage)
+        throw new ArgumentException("End page cannot be less than start page");
+      if (startPage < 0)
+        throw new ArgumentException("Start page cannot be less than zero");
+      if (endPage >= document.PageCount)
+        throw new ArgumentException("End page cannot be more than the number of pages in the document");
+
+      return new PdfRangeDocument(
+        document,
+        startPage,
+        endPage
+      );
+    }
+
+    private PdfBookmarkCollection TranslateBookmarks(PdfBookmarkCollection bookmarks)
+    {
+      PdfBookmarkCollection result = new PdfBookmarkCollection();
+
+      TranslateBookmarks(result, bookmarks);
+
+      return result;
+    }
+
+    private void TranslateBookmarks(PdfBookmarkCollection result, PdfBookmarkCollection bookmarks)
+    {
+      foreach (PdfBookmark bookmark in bookmarks)
+        if (bookmark.PageIndex >= _startPage && bookmark.PageIndex <= _endPage)
+        {
+          PdfBookmark resultBookmark = new PdfBookmark
+          {
+            PageIndex = bookmark.PageIndex - _startPage,
+            Title = bookmark.Title
+          };
+
+          TranslateBookmarks(resultBookmark.Children, bookmark.Children);
+
+          result.Add(resultBookmark);
+        }
+    }
+
+    private IList<SizeF> TranslateSizes(IList<SizeF> pageSizes)
+    {
+      List<SizeF> result = new List<SizeF>();
+
+      for (int i = _startPage; i <= _endPage; i++) result.Add(pageSizes[i]);
+
+      return result;
+    }
+
+    private PdfMatches TranslateMatches(PdfMatches search)
+    {
+      if (search == null)
+        return null;
+
+      List<PdfMatch> matches = new List<PdfMatch>();
+
+      foreach (PdfMatch match in search.Items)
+        matches.Add(new PdfMatch(
+          match.Text,
+          new PdfTextSpan(match.TextSpan.Page + _startPage, match.TextSpan.Offset, match.TextSpan.Length),
+          match.Page + _startPage
+        ));
+
+      return new PdfMatches(
+        search.StartPage + _startPage,
+        search.EndPage + _startPage,
+        matches
+      );
+    }
+
+    private PdfPageLinks TranslateLinks(PdfPageLinks pageLinks)
+    {
+      if (pageLinks == null)
+        return null;
+
+      List<PdfPageLink> links = new List<PdfPageLink>();
+
+      foreach (PdfPageLink link in pageLinks.Links)
+        links.Add(new PdfPageLink(
+          link.Bounds,
+          link.TargetPage + _startPage,
+          link.Uri
+        ));
+
+      return new PdfPageLinks(links);
+    }
+
     private int TranslatePage(int page)
     {
       if (page < 0 || page >= PageCount)
         throw new ArgumentException("Page number out of range");
       return page + _startPage;
-    }
-
-    public void Dispose()
-    {
-      _document.Dispose();
     }
   }
 }

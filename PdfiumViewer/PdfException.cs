@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.Serialization;
-using System.Text;
 
 #pragma warning disable 1591
 
@@ -9,8 +7,6 @@ namespace PdfiumViewer
 {
   public class PdfException : Exception
   {
-    public PdfError Error { get; private set; }
-
     public PdfException()
     {
     }
@@ -20,6 +16,23 @@ namespace PdfiumViewer
     {
       Error = error;
     }
+
+    public PdfException(string message)
+      : base(message)
+    {
+    }
+
+    public PdfException(string message, Exception innerException)
+      : base(message, innerException)
+    {
+    }
+
+    protected PdfException(SerializationInfo info, StreamingContext context)
+      : base(info, context)
+    {
+    }
+
+    public PdfError Error { get; }
 
     private static string GetMessage(PdfError error)
     {
@@ -40,21 +53,6 @@ namespace PdfiumViewer
         default:
           return "Unknown error";
       }
-    }
-
-    public PdfException(string message)
-      : base(message)
-    {
-    }
-
-    public PdfException(string message, Exception innerException)
-      : base(message, innerException)
-    {
-    }
-
-    protected PdfException(SerializationInfo info, StreamingContext context)
-      : base(info, context)
-    {
     }
   }
 }

@@ -1,13 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Text;
+using System.Drawing.Printing;
 using System.Windows.Forms;
+using PdfiumViewer.Properties;
 
 namespace PdfiumViewer
 {
   /// <summary>
-  /// Control to host PDF documents with support for printing.
+  ///   Control to host PDF documents with support for printing.
   /// </summary>
   public partial class PdfViewer : UserControl
   {
@@ -15,7 +15,22 @@ namespace PdfiumViewer
     private bool _showBookmarks;
 
     /// <summary>
-    /// Gets or sets the PDF document.
+    ///   Initializes a new instance of the PdfViewer class.
+    /// </summary>
+    public PdfViewer()
+    {
+      DefaultPrintMode = PdfPrintMode.CutMargin;
+
+      InitializeComponent();
+
+      ShowToolbar = true;
+      ShowBookmarks = true;
+
+      UpdateEnabled();
+    }
+
+    /// <summary>
+    ///   Gets or sets the PDF document.
     /// </summary>
     [DefaultValue(null)]
     public IPdfDocument Document
@@ -39,7 +54,7 @@ namespace PdfiumViewer
     }
 
     /// <summary>
-    /// Get the <see cref="PdfRenderer"/> that renders the PDF document.
+    ///   Get the <see cref="PdfRenderer" /> that renders the PDF document.
     /// </summary>
     public PdfRenderer Renderer
     {
@@ -47,19 +62,19 @@ namespace PdfiumViewer
     }
 
     /// <summary>
-    /// Gets or sets the default document name used when saving the document.
+    ///   Gets or sets the default document name used when saving the document.
     /// </summary>
     [DefaultValue(null)]
     public string DefaultDocumentName { get; set; }
 
     /// <summary>
-    /// Gets or sets the default print mode.
+    ///   Gets or sets the default print mode.
     /// </summary>
     [DefaultValue(PdfPrintMode.CutMargin)]
     public PdfPrintMode DefaultPrintMode { get; set; }
 
     /// <summary>
-    /// Gets or sets the way the document should be zoomed initially.
+    ///   Gets or sets the way the document should be zoomed initially.
     /// </summary>
     [DefaultValue(PdfViewerZoomMode.FitHeight)]
     public PdfViewerZoomMode ZoomMode
@@ -69,7 +84,7 @@ namespace PdfiumViewer
     }
 
     /// <summary>
-    /// Gets or sets whether the toolbar should be shown.
+    ///   Gets or sets whether the toolbar should be shown.
     /// </summary>
     [DefaultValue(true)]
     public bool ShowToolbar
@@ -79,7 +94,7 @@ namespace PdfiumViewer
     }
 
     /// <summary>
-    /// Gets or sets whether the bookmarks panel should be shown.
+    ///   Gets or sets whether the bookmarks panel should be shown.
     /// </summary>
     [DefaultValue(true)]
     public bool ShowBookmarks
@@ -93,26 +108,26 @@ namespace PdfiumViewer
     }
 
     /// <summary>
-    /// Gets or sets the pre-selected printer to be used when the print
-    /// dialog shows up.
+    ///   Gets or sets the pre-selected printer to be used when the print
+    ///   dialog shows up.
     /// </summary>
     [DefaultValue(null)]
     public string DefaultPrinter { get; set; }
 
     /// <summary>
-    /// Occurs when a link in the pdf document is clicked.
+    ///   Occurs when a link in the pdf document is clicked.
     /// </summary>
     [Category("Action")]
     [Description("Occurs when a link in the pdf document is clicked.")]
     public event LinkClickEventHandler LinkClick;
 
     /// <summary>
-    /// Called when a link is clicked.
+    ///   Called when a link is clicked.
     /// </summary>
     /// <param name="e"></param>
     protected virtual void OnLinkClick(LinkClickEventArgs e)
     {
-      var handler = LinkClick;
+      LinkClickEventHandler handler = LinkClick;
       if (handler != null)
         handler(this, e);
     }
@@ -128,24 +143,9 @@ namespace PdfiumViewer
         _container.Panel1Collapsed = false;
 
         _bookmarks.Nodes.Clear();
-        foreach (var bookmark in _document.Bookmarks)
+        foreach (PdfBookmark bookmark in _document.Bookmarks)
           _bookmarks.Nodes.Add(GetBookmarkNode(bookmark));
       }
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the PdfViewer class.
-    /// </summary>
-    public PdfViewer()
-    {
-      DefaultPrintMode = PdfPrintMode.CutMargin;
-
-      InitializeComponent();
-
-      ShowToolbar = true;
-      ShowBookmarks = true;
-
-      UpdateEnabled();
     }
 
     private void UpdateEnabled()
@@ -165,16 +165,15 @@ namespace PdfiumViewer
 
     private void _saveButton_Click(object sender, EventArgs e)
     {
-      using (var form = new SaveFileDialog())
+      using (SaveFileDialog form = new SaveFileDialog())
       {
         form.DefaultExt = ".pdf";
-        form.Filter = Properties.Resources.SaveAsFilter;
+        form.Filter = Resources.SaveAsFilter;
         form.RestoreDirectory = true;
-        form.Title = Properties.Resources.SaveAsTitle;
+        form.Title = Resources.SaveAsTitle;
         form.FileName = DefaultDocumentName;
 
         if (form.ShowDialog(FindForm()) == DialogResult.OK)
-        {
           try
           {
             _document.Save(form.FileName);
@@ -183,20 +182,20 @@ namespace PdfiumViewer
           {
             MessageBox.Show(
               FindForm(),
-              Properties.Resources.SaveAsFailedText,
-              Properties.Resources.SaveAsFailedTitle,
+              Resources.SaveAsFailedText,
+              Resources.SaveAsFailedTitle,
               MessageBoxButtons.OK,
               MessageBoxIcon.Error
             );
           }
-        }
       }
     }
 
     private void _printButton_Click(object sender, EventArgs e)
     {
-      using (var form = new PrintDialog())
-        using (var document = _document.CreatePrintDocument(DefaultPrintMode))
+      using (PrintDialog form = new PrintDialog())
+      {
+        using (PrintDocument document = _document.CreatePrintDocument(DefaultPrintMode))
         {
           form.AllowSomePages = true;
           form.Document = document;
@@ -207,7 +206,6 @@ namespace PdfiumViewer
             form.Document.PrinterSettings.PrinterName = DefaultPrinter;
 
           if (form.ShowDialog(FindForm()) == DialogResult.OK)
-          {
             try
             {
               if (form.Document.PrinterSettings.FromPage <= _document.PageCount)
@@ -217,8 +215,8 @@ namespace PdfiumViewer
             {
               // Ignore exceptions; the printer dialog should take care of this.
             }
-          }
         }
+      }
     }
 
     private TreeNode GetBookmarkNode(PdfBookmark bookmark)
@@ -226,10 +224,8 @@ namespace PdfiumViewer
       TreeNode node = new TreeNode(bookmark.Title);
       node.Tag = bookmark;
       if (bookmark.Children != null)
-      {
-        foreach (var child in bookmark.Children)
+        foreach (PdfBookmark child in bookmark.Children)
           node.Nodes.Add(GetBookmarkNode(child));
-      }
 
       return node;
     }

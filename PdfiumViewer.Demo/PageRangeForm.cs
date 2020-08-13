@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Text;
 using System.Windows.Forms;
 
 namespace PdfiumViewer.Demo
@@ -11,8 +6,6 @@ namespace PdfiumViewer.Demo
   public partial class PageRangeForm : Form
   {
     private readonly IPdfDocument _document;
-
-    public IPdfDocument Document { get; private set; }
 
     public PageRangeForm(IPdfDocument document)
     {
@@ -23,6 +16,8 @@ namespace PdfiumViewer.Demo
       _startPage.Text = "1";
       _endPage.Text = document.PageCount.ToString();
     }
+
+    public IPdfDocument Document { get; private set; }
 
     private void _acceptButton_Click(object sender, EventArgs e)
     {

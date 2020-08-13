@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Security.Permissions;
-using System.Text;
 using System.Windows.Forms;
 
 #pragma warning disable 1591
@@ -13,37 +11,19 @@ namespace PdfiumViewer
 {
   public class CustomScrollControl : Control
   {
-    private Size _displaySize;
-    private Rectangle _displayRect;
-    private readonly ScrollProperties _verticalScroll;
     private readonly ScrollProperties _horizontalScroll;
+    private readonly ScrollProperties _verticalScroll;
+    private Rectangle _displayRect;
+    private Size _displaySize;
 
-    public event ScrollEventHandler Scroll;
-
-    protected virtual void OnScroll(ScrollEventArgs se)
+    public CustomScrollControl()
     {
-      var ev = Scroll;
+      SetStyle(ControlStyles.Selectable, true);
+      SetStyle(ControlStyles.UserMouse, true);
+      SetStyle(ControlStyles.AllPaintingInWmPaint, false);
 
-      if (ev != null)
-        ev(this, se);
-    }
-
-    public event EventHandler DisplayRectangleChanged;
-
-    protected virtual void OnDisplayRectangleChanged(EventArgs e)
-    {
-      var ev = DisplayRectangleChanged;
-      if (ev != null)
-        ev(this, e);
-    }
-
-    public event SetCursorEventHandler SetCursor;
-
-    protected virtual void OnSetCursor(SetCursorEventArgs e)
-    {
-      var handler = SetCursor;
-      if (handler != null)
-        handler(this, e);
+      _horizontalScroll = new ScrollProperties(this, NativeMethods.SB_HORZ);
+      _verticalScroll = new ScrollProperties(this, NativeMethods.SB_VERT);
     }
 
     protected override CreateParams CreateParams
@@ -55,11 +35,11 @@ namespace PdfiumViewer
         if (HScroll || _horizontalScroll.Visible)
           cp.Style |= NativeMethods.WS_HSCROLL;
         else
-          cp.Style &= (~NativeMethods.WS_HSCROLL);
+          cp.Style &= ~NativeMethods.WS_HSCROLL;
         if (VScroll || _verticalScroll.Visible)
           cp.Style |= NativeMethods.WS_VSCROLL;
         else
-          cp.Style &= (~NativeMethods.WS_VSCROLL);
+          cp.Style &= ~NativeMethods.WS_VSCROLL;
 
         return cp;
       }
@@ -90,14 +70,32 @@ namespace PdfiumViewer
 
     [Browsable(false)] public bool VScroll { get; private set; }
 
-    public CustomScrollControl()
-    {
-      SetStyle(ControlStyles.Selectable, true);
-      SetStyle(ControlStyles.UserMouse, true);
-      SetStyle(ControlStyles.AllPaintingInWmPaint, false);
+    public event ScrollEventHandler Scroll;
 
-      _horizontalScroll = new ScrollProperties(this, NativeMethods.SB_HORZ);
-      _verticalScroll = new ScrollProperties(this, NativeMethods.SB_VERT);
+    protected virtual void OnScroll(ScrollEventArgs se)
+    {
+      ScrollEventHandler ev = Scroll;
+
+      if (ev != null)
+        ev(this, se);
+    }
+
+    public event EventHandler DisplayRectangleChanged;
+
+    protected virtual void OnDisplayRectangleChanged(EventArgs e)
+    {
+      EventHandler ev = DisplayRectangleChanged;
+      if (ev != null)
+        ev(this, e);
+    }
+
+    public event SetCursorEventHandler SetCursor;
+
+    protected virtual void OnSetCursor(SetCursorEventArgs e)
+    {
+      SetCursorEventHandler handler = SetCursor;
+      if (handler != null)
+        handler(this, e);
     }
 
     protected void SetDisplaySize(Size size)
@@ -118,8 +116,8 @@ namespace PdfiumViewer
 
     private bool ApplyScrollbarChanges()
     {
-      var fullClient = ClientRectangle;
-      var minClient = fullClient;
+      Rectangle fullClient = ClientRectangle;
+      Rectangle minClient = fullClient;
 
       if (HScroll)
         fullClient.Height += SystemInformation.HorizontalScrollBarHeight;
@@ -142,7 +140,7 @@ namespace PdfiumViewer
       bool needHscroll = maxX > fullClient.Width;
       bool needVscroll = maxY > fullClient.Height;
 
-      var clientToBe = fullClient;
+      Rectangle clientToBe = fullClient;
 
       if (needHscroll)
         clientToBe.Height -= SystemInformation.HorizontalScrollBarHeight;
@@ -162,7 +160,7 @@ namespace PdfiumViewer
       bool needLayout = SetVisibleScrollbars(needHscroll, needVscroll);
 
       if (HScroll || VScroll)
-        needLayout = (SetDisplayRectangleSize(maxX, maxY) || needLayout);
+        needLayout = SetDisplayRectangleSize(maxX, maxY) || needLayout;
       else
         SetDisplayRectangleSize(maxX, maxY);
 
@@ -186,7 +184,7 @@ namespace PdfiumViewer
 
       if (VScroll)
       {
-        var client = ClientRectangle;
+        Rectangle client = ClientRectangle;
         int pos = -_displayRect.Y;
         int maxPos = -(client.Height - _displayRect.Height);
 
@@ -201,7 +199,7 @@ namespace PdfiumViewer
       }
       else if (HScroll)
       {
-        var client = ClientRectangle;
+        Rectangle client = ClientRectangle;
         int pos = -_displayRect.X;
         int maxPos = -(client.Width - _displayRect.Width);
 
@@ -247,8 +245,8 @@ namespace PdfiumViewer
       int xDelta = 0;
       int yDelta = 0;
 
-      var client = ClientRectangle;
-      var displayRectangle = _displayRect;
+      Rectangle client = ClientRectangle;
+      Rectangle displayRectangle = _displayRect;
       int minX = Math.Min(client.Width - displayRectangle.Width, 0);
       int minY = Math.Min(client.Height - displayRectangle.Height, 0);
 
@@ -271,9 +269,9 @@ namespace PdfiumViewer
 
       if ((xDelta != 0 || yDelta != 0) && IsHandleCreated && preserveContents)
       {
-        var cr = ClientRectangle;
-        var rcClip = new NativeMethods.RECT(cr);
-        var rcUpdate = new NativeMethods.RECT(cr);
+        Rectangle cr = ClientRectangle;
+        NativeMethods.RECT rcClip = new NativeMethods.RECT(cr);
+        NativeMethods.RECT rcUpdate = new NativeMethods.RECT(cr);
 
         NativeMethods.ScrollWindowEx(
           new HandleRef(this, Handle), xDelta, yDelta,
@@ -290,7 +288,7 @@ namespace PdfiumViewer
 
     private int ScrollThumbPosition(int fnBar)
     {
-      var si = new NativeMethods.SCROLLINFO
+      NativeMethods.SCROLLINFO si = new NativeMethods.SCROLLINFO
       {
         fMask = NativeMethods.SIF_TRACKPOS
       };
@@ -416,7 +414,7 @@ namespace PdfiumViewer
       }
     }
 
-    private void WmHScroll(ref System.Windows.Forms.Message m)
+    private void WmHScroll(ref Message m)
     {
       if (m.LParam != IntPtr.Zero)
       {
@@ -466,7 +464,7 @@ namespace PdfiumViewer
       WmOnScroll(ref m, oldValue, pos, ScrollOrientation.HorizontalScroll);
     }
 
-    private void WmVScroll(ref System.Windows.Forms.Message m)
+    private void WmVScroll(ref Message m)
     {
       if (m.LParam != IntPtr.Zero)
       {
@@ -614,10 +612,10 @@ namespace PdfiumViewer
       SyncScrollbars();
     }
 
-    private void WmOnScroll(ref System.Windows.Forms.Message m, int oldValue, int value,
+    private void WmOnScroll(ref Message m, int oldValue, int value,
       ScrollOrientation scrollOrientation)
     {
-      var type = (ScrollEventType) NativeMethods.Util.LOWORD(m.WParam);
+      ScrollEventType type = (ScrollEventType) NativeMethods.Util.LOWORD(m.WParam);
 
       if (type != ScrollEventType.EndScroll)
         OnScroll(new ScrollEventArgs(type, oldValue, value, scrollOrientation));
@@ -625,7 +623,7 @@ namespace PdfiumViewer
 
     [EditorBrowsable(EditorBrowsableState.Advanced)]
     [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.UnmanagedCode)]
-    protected override void WndProc(ref System.Windows.Forms.Message m)
+    protected override void WndProc(ref Message m)
     {
       switch (m.Msg)
       {
@@ -650,7 +648,7 @@ namespace PdfiumViewer
 
     private void WmSetCursor(ref Message m)
     {
-      var e = new SetCursorEventArgs(
+      SetCursorEventArgs e = new SetCursorEventArgs(
         PointToClient(Cursor.Position),
         (HitTest) (m.LParam.ToInt32() & 0xffff)
       );
@@ -659,15 +657,15 @@ namespace PdfiumViewer
     }
 
     /// <summary>
-    /// Determines whether the specified key is a regular input key or a special key that requires preprocessing.
+    ///   Determines whether the specified key is a regular input key or a special key that requires preprocessing.
     /// </summary>
     /// <returns>
-    /// true if the specified key is a regular input key; otherwise, false.
+    ///   true if the specified key is a regular input key; otherwise, false.
     /// </returns>
-    /// <param name="keyData">One of the <see cref="T:System.Windows.Forms.Keys"/> values. </param>
+    /// <param name="keyData">One of the <see cref="T:System.Windows.Forms.Keys" /> values. </param>
     protected override bool IsInputKey(Keys keyData)
     {
-      switch ((keyData) & Keys.KeyCode)
+      switch (keyData & Keys.KeyCode)
       {
         case Keys.Up:
           PerformScroll(ScrollAction.LineUp, Orientation.Vertical);
@@ -700,10 +698,10 @@ namespace PdfiumViewer
 
     private class ScrollProperties
     {
-      private int _smallChange = 1;
-      private int _largeChange = 10;
       private readonly int _orientation;
       private readonly CustomScrollControl _parentControl;
+      private int _largeChange = 10;
+      private int _smallChange = 1;
 
       public ScrollProperties(CustomScrollControl container, int orientation)
       {
@@ -736,7 +734,7 @@ namespace PdfiumViewer
         if (!_parentControl.IsHandleCreated || !Visible)
           return;
 
-        var si = new NativeMethods.SCROLLINFO
+        NativeMethods.SCROLLINFO si = new NativeMethods.SCROLLINFO
         {
           cbSize = Marshal.SizeOf(typeof(NativeMethods.SCROLLINFO)),
           fMask = NativeMethods.SIF_ALL,

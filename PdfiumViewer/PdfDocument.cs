@@ -6,149 +6,18 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Drawing.Printing;
 using System.IO;
-using System.Text;
 using System.Windows.Forms;
 
 namespace PdfiumViewer
 {
   /// <summary>
-  /// Provides functionality to render a PDF document.
+  ///   Provides functionality to render a PDF document.
   /// </summary>
   public class PdfDocument : IPdfDocument
   {
+    private readonly List<SizeF> _pageSizes;
     private bool _disposed;
     private PdfFile _file;
-    private readonly List<SizeF> _pageSizes;
-
-    /// <summary>
-    /// Initializes a new instance of the PdfDocument class with the provided path.
-    /// </summary>
-    /// <param name="path">Path to the PDF document.</param>
-    public static PdfDocument Load(string path)
-    {
-      return Load(path, null);
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the PdfDocument class with the provided path.
-    /// </summary>
-    /// <param name="path">Path to the PDF document.</param>
-    /// <param name="password">Password for the PDF document.</param>
-    public static PdfDocument Load(string path, string password)
-    {
-      if (path == null)
-        throw new ArgumentNullException(nameof(path));
-
-      return Load(File.OpenRead(path), password);
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the PdfDocument class with the provided path.
-    /// </summary>
-    /// <param name="owner">Window to show any UI for.</param>
-    /// <param name="path">Path to the PDF document.</param>
-    public static PdfDocument Load(IWin32Window owner, string path)
-    {
-      if (owner == null)
-        throw new ArgumentNullException(nameof(owner));
-      if (path == null)
-        throw new ArgumentNullException(nameof(path));
-
-      return Load(owner, File.OpenRead(path), null);
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the PdfDocument class with the provided path.
-    /// </summary>
-    /// <param name="owner">Window to show any UI for.</param>
-    /// <param name="stream">Stream for the PDF document.</param>
-    public static PdfDocument Load(IWin32Window owner, Stream stream)
-    {
-      if (owner == null)
-        throw new ArgumentNullException(nameof(owner));
-      if (stream == null)
-        throw new ArgumentNullException(nameof(stream));
-
-      return Load(owner, stream, null);
-    }
-
-    private static PdfDocument Load(IWin32Window owner, Stream stream, string password)
-    {
-      try
-      {
-        while (true)
-        {
-          try
-          {
-            return new PdfDocument(stream, password);
-          }
-          catch (PdfException ex)
-          {
-            if (owner != null && ex.Error == PdfError.PasswordProtected)
-            {
-              using (var form = new PasswordForm())
-              {
-                if (form.ShowDialog(owner) == DialogResult.OK)
-                {
-                  password = form.Password;
-                  continue;
-                }
-              }
-            }
-
-            throw;
-          }
-        }
-      }
-      catch
-      {
-        stream.Dispose();
-        throw;
-      }
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the PdfDocument class with the provided stream.
-    /// </summary>
-    /// <param name="stream">Stream for the PDF document.</param>
-    public static PdfDocument Load(Stream stream)
-    {
-      return Load(stream, null);
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the PdfDocument class with the provided stream.
-    /// </summary>
-    /// <param name="stream">Stream for the PDF document.</param>
-    /// <param name="password">Password for the PDF document.</param>
-    public static PdfDocument Load(Stream stream, string password)
-    {
-      if (stream == null)
-        throw new ArgumentNullException(nameof(stream));
-
-      return new PdfDocument(stream, password);
-    }
-
-    /// <summary>
-    /// Number of pages in the PDF document.
-    /// </summary>
-    public int PageCount
-    {
-      get { return PageSizes.Count; }
-    }
-
-    /// <summary>
-    /// Bookmarks stored in this PdfFile
-    /// </summary>
-    public PdfBookmarkCollection Bookmarks
-    {
-      get { return _file.Bookmarks; }
-    }
-
-    /// <summary>
-    /// Size of each page in the PDF document.
-    /// </summary>
-    public IList<SizeF> PageSizes { get; private set; }
 
     private PdfDocument(Stream stream, string password)
     {
@@ -162,7 +31,28 @@ namespace PdfiumViewer
     }
 
     /// <summary>
-    /// Renders a page of the PDF document to the provided graphics instance.
+    ///   Number of pages in the PDF document.
+    /// </summary>
+    public int PageCount
+    {
+      get { return PageSizes.Count; }
+    }
+
+    /// <summary>
+    ///   Bookmarks stored in this PdfFile
+    /// </summary>
+    public PdfBookmarkCollection Bookmarks
+    {
+      get { return _file.Bookmarks; }
+    }
+
+    /// <summary>
+    ///   Size of each page in the PDF document.
+    /// </summary>
+    public IList<SizeF> PageSizes { get; }
+
+    /// <summary>
+    ///   Renders a page of the PDF document to the provided graphics instance.
     /// </summary>
     /// <param name="page">Number of the page to render.</param>
     /// <param name="graphics">Graphics instance to render the page on.</param>
@@ -176,7 +66,7 @@ namespace PdfiumViewer
     }
 
     /// <summary>
-    /// Renders a page of the PDF document to the provided graphics instance.
+    ///   Renders a page of the PDF document to the provided graphics instance.
     /// </summary>
     /// <param name="page">Number of the page to render.</param>
     /// <param name="graphics">Graphics instance to render the page on.</param>
@@ -194,13 +84,13 @@ namespace PdfiumViewer
       float graphicsDpiX = graphics.DpiX;
       float graphicsDpiY = graphics.DpiY;
 
-      var dc = graphics.GetHdc();
+      IntPtr dc = graphics.GetHdc();
 
       try
       {
         if ((int) graphicsDpiX != (int) dpiX || (int) graphicsDpiY != (int) dpiY)
         {
-          var transform = new NativeMethods.XFORM
+          NativeMethods.XFORM transform = new NativeMethods.XFORM
           {
             eM11 = graphicsDpiX / dpiX,
             eM22 = graphicsDpiY / dpiY
@@ -210,7 +100,7 @@ namespace PdfiumViewer
           NativeMethods.ModifyWorldTransform(dc, ref transform, NativeMethods.MWT_LEFTMULTIPLY);
         }
 
-        var point = new NativeMethods.POINT();
+        NativeMethods.POINT point = new NativeMethods.POINT();
         NativeMethods.SetViewportOrgEx(dc, bounds.X, bounds.Y, out point);
 
         bool success = _file.RenderPDFPageToDC(
@@ -233,7 +123,7 @@ namespace PdfiumViewer
     }
 
     /// <summary>
-    /// Renders a page of the PDF document to an image.
+    ///   Renders a page of the PDF document to an image.
     /// </summary>
     /// <param name="page">Number of the page to render.</param>
     /// <param name="dpiX">Horizontal DPI.</param>
@@ -242,13 +132,13 @@ namespace PdfiumViewer
     /// <returns>The rendered image.</returns>
     public Image Render(int page, float dpiX, float dpiY, bool forPrinting)
     {
-      var size = PageSizes[page];
+      SizeF size = PageSizes[page];
 
       return Render(page, (int) size.Width, (int) size.Height, dpiX, dpiY, forPrinting);
     }
 
     /// <summary>
-    /// Renders a page of the PDF document to an image.
+    ///   Renders a page of the PDF document to an image.
     /// </summary>
     /// <param name="page">Number of the page to render.</param>
     /// <param name="dpiX">Horizontal DPI.</param>
@@ -257,13 +147,13 @@ namespace PdfiumViewer
     /// <returns>The rendered image.</returns>
     public Image Render(int page, float dpiX, float dpiY, PdfRenderFlags flags)
     {
-      var size = PageSizes[page];
+      SizeF size = PageSizes[page];
 
       return Render(page, (int) size.Width, (int) size.Height, dpiX, dpiY, flags);
     }
 
     /// <summary>
-    /// Renders a page of the PDF document to an image.
+    ///   Renders a page of the PDF document to an image.
     /// </summary>
     /// <param name="page">Number of the page to render.</param>
     /// <param name="width">Width of the rendered image.</param>
@@ -278,7 +168,7 @@ namespace PdfiumViewer
     }
 
     /// <summary>
-    /// Renders a page of the PDF document to an image.
+    ///   Renders a page of the PDF document to an image.
     /// </summary>
     /// <param name="page">Number of the page to render.</param>
     /// <param name="width">Width of the rendered image.</param>
@@ -293,7 +183,7 @@ namespace PdfiumViewer
     }
 
     /// <summary>
-    /// Renders a page of the PDF document to an image.
+    ///   Renders a page of the PDF document to an image.
     /// </summary>
     /// <param name="page">Number of the page to render.</param>
     /// <param name="width">Width of the rendered image.</param>
@@ -315,14 +205,15 @@ namespace PdfiumViewer
         height = height * (int) dpiY / 72;
       }
 
-      var bitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+      Bitmap bitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
       bitmap.SetResolution(dpiX, dpiY);
 
-      var data = bitmap.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.ReadWrite, bitmap.PixelFormat);
+      BitmapData data =
+        bitmap.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.ReadWrite, bitmap.PixelFormat);
 
       try
       {
-        var handle = NativeMethods.FPDFBitmap_CreateEx(width, height, 4, data.Scan0, width * 4);
+        IntPtr handle = NativeMethods.FPDFBitmap_CreateEx(width, height, 4, data.Scan0, width * 4);
 
         try
         {
@@ -356,13 +247,8 @@ namespace PdfiumViewer
       return bitmap;
     }
 
-    private NativeMethods.FPDF FlagsToFPDFFlags(PdfRenderFlags flags)
-    {
-      return (NativeMethods.FPDF) (flags & ~(PdfRenderFlags.Transparent | PdfRenderFlags.CorrectFromDpi));
-    }
-
     /// <summary>
-    /// Save the PDF document to the specified location.
+    ///   Save the PDF document to the specified location.
     /// </summary>
     /// <param name="path">Path to save the PDF document to.</param>
     public void Save(string path)
@@ -370,14 +256,14 @@ namespace PdfiumViewer
       if (path == null)
         throw new ArgumentNullException("path");
 
-      using (var stream = File.Create(path))
+      using (FileStream stream = File.Create(path))
       {
         Save(stream);
       }
     }
 
     /// <summary>
-    /// Save the PDF document to the specified location.
+    ///   Save the PDF document to the specified location.
     /// </summary>
     /// <param name="stream">Stream to save the PDF document to.</param>
     public void Save(Stream stream)
@@ -389,7 +275,7 @@ namespace PdfiumViewer
     }
 
     /// <summary>
-    /// Finds all occurences of text.
+    ///   Finds all occurences of text.
     /// </summary>
     /// <param name="text">The text to search for.</param>
     /// <param name="matchCase">Whether to match case.</param>
@@ -401,7 +287,7 @@ namespace PdfiumViewer
     }
 
     /// <summary>
-    /// Finds all occurences of text.
+    ///   Finds all occurences of text.
     /// </summary>
     /// <param name="text">The text to search for.</param>
     /// <param name="matchCase">Whether to match case.</param>
@@ -414,7 +300,7 @@ namespace PdfiumViewer
     }
 
     /// <summary>
-    /// Finds all occurences of text.
+    ///   Finds all occurences of text.
     /// </summary>
     /// <param name="text">The text to search for.</param>
     /// <param name="matchCase">Whether to match case.</param>
@@ -428,7 +314,7 @@ namespace PdfiumViewer
     }
 
     /// <summary>
-    /// Get all text on the page.
+    ///   Get all text on the page.
     /// </summary>
     /// <param name="page">The page to get the text for.</param>
     /// <returns>The text on the page.</returns>
@@ -438,7 +324,7 @@ namespace PdfiumViewer
     }
 
     /// <summary>
-    /// Get all text matching the text span.
+    ///   Get all text matching the text span.
     /// </summary>
     /// <param name="textSpan">The span to get the text for.</param>
     /// <returns>The text matching the span.</returns>
@@ -448,11 +334,11 @@ namespace PdfiumViewer
     }
 
     /// <summary>
-    /// Get all bounding rectangles for the text span.
+    ///   Get all bounding rectangles for the text span.
     /// </summary>
     /// <description>
-    /// The algorithm used to get the bounding rectangles tries to join
-    /// adjacent character bounds into larger rectangles.
+    ///   The algorithm used to get the bounding rectangles tries to join
+    ///   adjacent character bounds into larger rectangles.
     /// </description>
     /// <param name="textSpan">The span to get the bounding rectangles for.</param>
     /// <returns>The bounding rectangles.</returns>
@@ -462,7 +348,7 @@ namespace PdfiumViewer
     }
 
     /// <summary>
-    /// Convert a point from device coordinates to page coordinates.
+    ///   Convert a point from device coordinates to page coordinates.
     /// </summary>
     /// <param name="page">The page number where the point is from.</param>
     /// <param name="point">The point to convert.</param>
@@ -473,7 +359,7 @@ namespace PdfiumViewer
     }
 
     /// <summary>
-    /// Convert a point from page coordinates to device coordinates.
+    ///   Convert a point from page coordinates to device coordinates.
     /// </summary>
     /// <param name="page">The page number where the point is from.</param>
     /// <param name="point">The point to convert.</param>
@@ -484,7 +370,7 @@ namespace PdfiumViewer
     }
 
     /// <summary>
-    /// Convert a rectangle from device coordinates to page coordinates.
+    ///   Convert a rectangle from device coordinates to page coordinates.
     /// </summary>
     /// <param name="page">The page where the rectangle is from.</param>
     /// <param name="rect">The rectangle to convert.</param>
@@ -495,7 +381,7 @@ namespace PdfiumViewer
     }
 
     /// <summary>
-    /// Convert a rectangle from page coordinates to device coordinates.
+    ///   Convert a rectangle from page coordinates to device coordinates.
     /// </summary>
     /// <param name="page">The page where the rectangle is from.</param>
     /// <param name="rect">The rectangle to convert.</param>
@@ -506,21 +392,24 @@ namespace PdfiumViewer
     }
 
     /// <summary>
-    /// Get the character index at or nearby a specific position. 
+    ///   Get the character index at or nearby a specific position.
     /// </summary>
     /// <param name="page">The page to get the character index from</param>
     /// <param name="x">X position</param>
     /// <param name="y">Y position</param>
     /// <param name="xTolerance">An x-axis tolerance value for character hit detection, in point unit.</param>
     /// <param name="yTolerance">A y-axis tolerance value for character hit detection, in point unit.</param>
-    /// <returns>The zero-based index of the character at, or nearby the point specified by parameter x and y. If there is no character at or nearby the point, it will return -1.</returns>
+    /// <returns>
+    ///   The zero-based index of the character at, or nearby the point specified by parameter x and y. If there is no
+    ///   character at or nearby the point, it will return -1.
+    /// </returns>
     public int GetCharacterIndexAtPosition(PdfPoint location, double xTolerance, double yTolerance)
     {
       return _file.GetCharIndexAtPos(location, xTolerance, yTolerance);
     }
 
     /// <summary>
-    /// Get the full word at or nearby a specific position
+    ///   Get the full word at or nearby a specific position
     /// </summary>
     /// <param name="location">The location to inspect</param>
     /// <param name="xTolerance">An x-axis tolerance value for character hit detection, in point unit.</param>
@@ -533,17 +422,20 @@ namespace PdfiumViewer
     }
 
     /// <summary>
-    /// Get number of characters in a page.
+    ///   Get number of characters in a page.
     /// </summary>
     /// <param name="page">The page to get the character count from</param>
-    /// <returns>Number of characters in the page. Generated characters, like additional space characters, new line characters, are also counted.</returns>
+    /// <returns>
+    ///   Number of characters in the page. Generated characters, like additional space characters, new line characters,
+    ///   are also counted.
+    /// </returns>
     public int CountCharacters(int page)
     {
       return _file.CountChars(page);
     }
 
     /// <summary>
-    /// Gets the rectangular areas occupied by a segment of text
+    ///   Gets the rectangular areas occupied by a segment of text
     /// </summary>
     /// <param name="page">The page to get the rectangles from</param>
     /// <returns>The rectangular areas occupied by a segment of text</returns>
@@ -553,7 +445,7 @@ namespace PdfiumViewer
     }
 
     /// <summary>
-    /// Creates a <see cref="PrintDocument"/> for the PDF document.
+    ///   Creates a <see cref="PrintDocument" /> for the PDF document.
     /// </summary>
     /// <returns></returns>
     public PrintDocument CreatePrintDocument()
@@ -562,10 +454,12 @@ namespace PdfiumViewer
     }
 
     /// <summary>
-    /// Creates a <see cref="PrintDocument"/> for the PDF document.
+    ///   Creates a <see cref="PrintDocument" /> for the PDF document.
     /// </summary>
-    /// <param name="printMode">Specifies the mode for printing. The default
-    /// value for this parameter is CutMargin.</param>
+    /// <param name="printMode">
+    ///   Specifies the mode for printing. The default
+    ///   value for this parameter is CutMargin.
+    /// </param>
     /// <returns></returns>
     public PrintDocument CreatePrintDocument(PdfPrintMode printMode)
     {
@@ -573,7 +467,7 @@ namespace PdfiumViewer
     }
 
     /// <summary>
-    /// Creates a <see cref="PrintDocument"/> for the PDF document.
+    ///   Creates a <see cref="PrintDocument" /> for the PDF document.
     /// </summary>
     /// <param name="settings">The settings used to configure the print document.</param>
     /// <returns></returns>
@@ -583,7 +477,7 @@ namespace PdfiumViewer
     }
 
     /// <summary>
-    /// Returns all links on the PDF page.
+    ///   Returns all links on the PDF page.
     /// </summary>
     /// <param name="page">The page to get the links for.</param>
     /// <param name="size">The size of the page.</param>
@@ -594,7 +488,7 @@ namespace PdfiumViewer
     }
 
     /// <summary>
-    /// Delete the page from the PDF document.
+    ///   Delete the page from the PDF document.
     /// </summary>
     /// <param name="page">The page to delete.</param>
     public void DeletePage(int page)
@@ -604,7 +498,7 @@ namespace PdfiumViewer
     }
 
     /// <summary>
-    /// Rotate the page.
+    ///   Rotate the page.
     /// </summary>
     /// <param name="page">The page to rotate.</param>
     /// <param name="rotation">How to rotate the page.</param>
@@ -615,7 +509,7 @@ namespace PdfiumViewer
     }
 
     /// <summary>
-    /// Get metadata information from the PDF document.
+    ///   Get metadata information from the PDF document.
     /// </summary>
     /// <returns>The PDF metadata.</returns>
     public PdfInformation GetInformation()
@@ -629,6 +523,116 @@ namespace PdfiumViewer
     {
       Dispose(true);
       GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    ///   Initializes a new instance of the PdfDocument class with the provided path.
+    /// </summary>
+    /// <param name="path">Path to the PDF document.</param>
+    public static PdfDocument Load(string path)
+    {
+      return Load(path, null);
+    }
+
+    /// <summary>
+    ///   Initializes a new instance of the PdfDocument class with the provided path.
+    /// </summary>
+    /// <param name="path">Path to the PDF document.</param>
+    /// <param name="password">Password for the PDF document.</param>
+    public static PdfDocument Load(string path, string password)
+    {
+      if (path == null)
+        throw new ArgumentNullException(nameof(path));
+
+      return Load(File.OpenRead(path), password);
+    }
+
+    /// <summary>
+    ///   Initializes a new instance of the PdfDocument class with the provided path.
+    /// </summary>
+    /// <param name="owner">Window to show any UI for.</param>
+    /// <param name="path">Path to the PDF document.</param>
+    public static PdfDocument Load(IWin32Window owner, string path)
+    {
+      if (owner == null)
+        throw new ArgumentNullException(nameof(owner));
+      if (path == null)
+        throw new ArgumentNullException(nameof(path));
+
+      return Load(owner, File.OpenRead(path), null);
+    }
+
+    /// <summary>
+    ///   Initializes a new instance of the PdfDocument class with the provided path.
+    /// </summary>
+    /// <param name="owner">Window to show any UI for.</param>
+    /// <param name="stream">Stream for the PDF document.</param>
+    public static PdfDocument Load(IWin32Window owner, Stream stream)
+    {
+      if (owner == null)
+        throw new ArgumentNullException(nameof(owner));
+      if (stream == null)
+        throw new ArgumentNullException(nameof(stream));
+
+      return Load(owner, stream, null);
+    }
+
+    private static PdfDocument Load(IWin32Window owner, Stream stream, string password)
+    {
+      try
+      {
+        while (true)
+          try
+          {
+            return new PdfDocument(stream, password);
+          }
+          catch (PdfException ex)
+          {
+            if (owner != null && ex.Error == PdfError.PasswordProtected)
+              using (PasswordForm form = new PasswordForm())
+              {
+                if (form.ShowDialog(owner) == DialogResult.OK)
+                {
+                  password = form.Password;
+                  continue;
+                }
+              }
+
+            throw;
+          }
+      }
+      catch
+      {
+        stream.Dispose();
+        throw;
+      }
+    }
+
+    /// <summary>
+    ///   Initializes a new instance of the PdfDocument class with the provided stream.
+    /// </summary>
+    /// <param name="stream">Stream for the PDF document.</param>
+    public static PdfDocument Load(Stream stream)
+    {
+      return Load(stream, null);
+    }
+
+    /// <summary>
+    ///   Initializes a new instance of the PdfDocument class with the provided stream.
+    /// </summary>
+    /// <param name="stream">Stream for the PDF document.</param>
+    /// <param name="password">Password for the PDF document.</param>
+    public static PdfDocument Load(Stream stream, string password)
+    {
+      if (stream == null)
+        throw new ArgumentNullException(nameof(stream));
+
+      return new PdfDocument(stream, password);
+    }
+
+    private NativeMethods.FPDF FlagsToFPDFFlags(PdfRenderFlags flags)
+    {
+      return (NativeMethods.FPDF) (flags & ~(PdfRenderFlags.Transparent | PdfRenderFlags.CorrectFromDpi));
     }
 
     /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>

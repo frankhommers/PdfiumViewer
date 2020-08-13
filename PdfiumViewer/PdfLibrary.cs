@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Text;
 
 namespace PdfiumViewer
 {
@@ -9,15 +6,6 @@ namespace PdfiumViewer
   {
     private static readonly object _syncRoot = new object();
     private static PdfLibrary _library;
-
-    public static void EnsureLoaded()
-    {
-      lock (_syncRoot)
-      {
-        if (_library == null)
-          _library = new PdfLibrary();
-      }
-    }
 
     private bool _disposed;
 
@@ -35,16 +23,25 @@ namespace PdfiumViewer
       NativeMethods.FPDF_InitLibrary();
     }
 
-    ~PdfLibrary()
-    {
-      Dispose(false);
-    }
-
     public void Dispose()
     {
       Dispose(true);
 
       GC.SuppressFinalize(this);
+    }
+
+    public static void EnsureLoaded()
+    {
+      lock (_syncRoot)
+      {
+        if (_library == null)
+          _library = new PdfLibrary();
+      }
+    }
+
+    ~PdfLibrary()
+    {
+      Dispose(false);
     }
 
     private void Dispose(bool disposing)

@@ -1,84 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Text;
 
 namespace PdfiumViewer
 {
   /// <summary>
-  /// Helper class for searching through PDF documents.
+  ///   Helper class for searching through PDF documents.
   /// </summary>
   public class PdfSearchManager
   {
-    private bool _highlightAllMatches;
-    private PdfMatches _matches;
     private List<IList<PdfRectangle>> _bounds;
     private int _firstMatch;
+    private bool _highlightAllMatches;
+    private PdfMatches _matches;
     private int _offset;
 
     /// <summary>
-    /// The renderer associated with the search manager.
-    /// </summary>
-    public PdfRenderer Renderer { get; }
-
-    /// <summary>
-    /// Gets or sets whether to match case.
-    /// </summary>
-    public bool MatchCase { get; set; }
-
-    /// <summary>
-    /// Gets or sets whether to match whole words.
-    /// </summary>
-    public bool MatchWholeWord { get; set; }
-
-    /// <summary>
-    /// Gets or sets the color of matched search terms.
-    /// </summary>
-    public Color MatchColor { get; }
-
-    /// <summary>
-    /// Gets or sets the border color of matched search terms.
-    /// </summary>
-    public Color MatchBorderColor { get; }
-
-    /// <summary>
-    /// Gets or sets the border width of matched search terms.
-    /// </summary>
-    public float MatchBorderWidth { get; }
-
-    /// <summary>
-    /// Gets or sets the color of the current match.
-    /// </summary>
-    public Color CurrentMatchColor { get; }
-
-    /// <summary>
-    /// Gets or sets the border color of the current match.
-    /// </summary>
-    public Color CurrentMatchBorderColor { get; }
-
-    /// <summary>
-    /// Gets or sets the border width of the current match.
-    /// </summary>
-    public float CurrentMatchBorderWidth { get; }
-
-    /// <summary>
-    /// Gets or sets whether all matches should be highlighted.
-    /// </summary>
-    public bool HighlightAllMatches
-    {
-      get { return _highlightAllMatches; }
-      set
-      {
-        if (_highlightAllMatches != value)
-        {
-          _highlightAllMatches = value;
-          UpdateHighlights();
-        }
-      }
-    }
-
-    /// <summary>
-    /// Creates a new instance of the search manager.
+    ///   Creates a new instance of the search manager.
     /// </summary>
     /// <param name="renderer">The renderer to create the search manager for.</param>
     public PdfSearchManager(PdfRenderer renderer)
@@ -94,7 +32,68 @@ namespace PdfiumViewer
     }
 
     /// <summary>
-    /// Searches for the specified text.
+    ///   The renderer associated with the search manager.
+    /// </summary>
+    public PdfRenderer Renderer { get; }
+
+    /// <summary>
+    ///   Gets or sets whether to match case.
+    /// </summary>
+    public bool MatchCase { get; set; }
+
+    /// <summary>
+    ///   Gets or sets whether to match whole words.
+    /// </summary>
+    public bool MatchWholeWord { get; set; }
+
+    /// <summary>
+    ///   Gets or sets the color of matched search terms.
+    /// </summary>
+    public Color MatchColor { get; }
+
+    /// <summary>
+    ///   Gets or sets the border color of matched search terms.
+    /// </summary>
+    public Color MatchBorderColor { get; }
+
+    /// <summary>
+    ///   Gets or sets the border width of matched search terms.
+    /// </summary>
+    public float MatchBorderWidth { get; }
+
+    /// <summary>
+    ///   Gets or sets the color of the current match.
+    /// </summary>
+    public Color CurrentMatchColor { get; }
+
+    /// <summary>
+    ///   Gets or sets the border color of the current match.
+    /// </summary>
+    public Color CurrentMatchBorderColor { get; }
+
+    /// <summary>
+    ///   Gets or sets the border width of the current match.
+    /// </summary>
+    public float CurrentMatchBorderWidth { get; }
+
+    /// <summary>
+    ///   Gets or sets whether all matches should be highlighted.
+    /// </summary>
+    public bool HighlightAllMatches
+    {
+      get { return _highlightAllMatches; }
+      set
+      {
+        if (_highlightAllMatches != value)
+        {
+          _highlightAllMatches = value;
+          UpdateHighlights();
+        }
+      }
+    }
+
+    /// <summary>
+    ///   Searches for the specified text.
     /// </summary>
     /// <param name="text">The text to search.</param>
     /// <returns>Whether any matches were found.</returns>
@@ -102,7 +101,7 @@ namespace PdfiumViewer
     {
       Renderer.Markers.Clear();
 
-      if (String.IsNullOrEmpty(text))
+      if (string.IsNullOrEmpty(text))
       {
         _matches = null;
         _bounds = null;
@@ -122,18 +121,15 @@ namespace PdfiumViewer
 
     private List<IList<PdfRectangle>> GetAllBounds()
     {
-      var result = new List<IList<PdfRectangle>>();
+      List<IList<PdfRectangle>> result = new List<IList<PdfRectangle>>();
 
-      foreach (var match in _matches.Items)
-      {
-        result.Add(Renderer.Document.GetTextBounds(match.TextSpan));
-      }
+      foreach (PdfMatch match in _matches.Items) result.Add(Renderer.Document.GetTextBounds(match.TextSpan));
 
       return result;
     }
 
     /// <summary>
-    /// Find the next matched term.
+    ///   Find the next matched term.
     /// </summary>
     /// <param name="forward">Whether or not to search forward.</param>
     /// <returns>False when the first match was found again; otherwise true.</returns>
@@ -174,7 +170,7 @@ namespace PdfiumViewer
 
     private void ScrollCurrentIntoView()
     {
-      var current = _bounds[_offset];
+      IList<PdfRectangle> current = _bounds[_offset];
       if (current.Count > 0)
         Renderer.ScrollIntoView(current[0]);
     }
@@ -187,7 +183,7 @@ namespace PdfiumViewer
 
         for (int j = 0; j < _matches.Items.Count; j++)
         {
-          var match = _matches.Items[j];
+          PdfMatch match = _matches.Items[j];
           if (match.Page == page)
             return j;
         }
@@ -197,7 +193,7 @@ namespace PdfiumViewer
     }
 
     /// <summary>
-    /// Resets the search manager.
+    ///   Resets the search manager.
     /// </summary>
     public void Reset()
     {
@@ -212,30 +208,23 @@ namespace PdfiumViewer
         return;
 
       if (_highlightAllMatches)
-      {
         for (int i = 0; i < _matches.Items.Count; i++)
-        {
           AddMatch(i, i == _offset);
-        }
-      }
-      else if (_offset != -1)
-      {
-        AddMatch(_offset, true);
-      }
+      else if (_offset != -1) AddMatch(_offset, true);
     }
 
     private void AddMatch(int index, bool current)
     {
-      foreach (var pdfBounds in _bounds[index])
+      foreach (PdfRectangle pdfBounds in _bounds[index])
       {
-        var bounds = new RectangleF(
+        RectangleF bounds = new RectangleF(
           pdfBounds.Bounds.Left - 1,
           pdfBounds.Bounds.Top + 1,
           pdfBounds.Bounds.Width + 2,
           pdfBounds.Bounds.Height - 2
         );
 
-        var marker = new PdfMarker(
+        PdfMarker marker = new PdfMarker(
           pdfBounds.Page,
           bounds,
           current ? CurrentMatchColor : MatchColor,

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace PdfiumViewer
+﻿namespace PdfiumViewer
 {
   public class PdfiumResolver
   {
@@ -15,7 +11,7 @@ namespace PdfiumViewer
 
     internal static string GetPdfiumFileName()
     {
-      var e = new PdfiumResolveEventArgs();
+      PdfiumResolveEventArgs e = new PdfiumResolveEventArgs();
       OnResolve(e);
       return e.PdfiumFileName;
     }
