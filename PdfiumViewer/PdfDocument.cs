@@ -77,7 +77,7 @@ namespace PdfiumViewer
     public void Render(int page, Graphics graphics, float dpiX, float dpiY, Rectangle bounds, PdfRenderFlags flags)
     {
       if (graphics == null)
-        throw new ArgumentNullException("graphics");
+        throw new ArgumentNullException(nameof(graphics));
       if (_disposed)
         throw new ObjectDisposedException(GetType().Name);
 
@@ -254,7 +254,7 @@ namespace PdfiumViewer
     public void Save(string path)
     {
       if (path == null)
-        throw new ArgumentNullException("path");
+        throw new ArgumentNullException(nameof(path));
 
       using (FileStream stream = File.Create(path))
       {
@@ -269,7 +269,7 @@ namespace PdfiumViewer
     public void Save(Stream stream)
     {
       if (stream == null)
-        throw new ArgumentNullException("stream");
+        throw new ArgumentNullException(nameof(stream));
 
       _file.Save(stream);
     }
@@ -394,9 +394,7 @@ namespace PdfiumViewer
     /// <summary>
     ///   Get the character index at or nearby a specific position.
     /// </summary>
-    /// <param name="page">The page to get the character index from</param>
-    /// <param name="x">X position</param>
-    /// <param name="y">Y position</param>
+    /// <param name="location">The location to inspect</param>
     /// <param name="xTolerance">An x-axis tolerance value for character hit detection, in point unit.</param>
     /// <param name="yTolerance">A y-axis tolerance value for character hit detection, in point unit.</param>
     /// <returns>
@@ -438,6 +436,8 @@ namespace PdfiumViewer
     ///   Gets the rectangular areas occupied by a segment of text
     /// </summary>
     /// <param name="page">The page to get the rectangles from</param>
+    /// <param name="startIndex"></param>
+    /// <param name="count"></param>
     /// <returns>The rectangular areas occupied by a segment of text</returns>
     public List<PdfRectangle> GetTextRectangles(int page, int startIndex, int count)
     {
@@ -582,6 +582,7 @@ namespace PdfiumViewer
       try
       {
         while (true)
+        {
           try
           {
             return new PdfDocument(stream, password);
@@ -589,6 +590,7 @@ namespace PdfiumViewer
           catch (PdfException ex)
           {
             if (owner != null && ex.Error == PdfError.PasswordProtected)
+            {
               using (PasswordForm form = new PasswordForm())
               {
                 if (form.ShowDialog(owner) == DialogResult.OK)
@@ -597,9 +599,11 @@ namespace PdfiumViewer
                   continue;
                 }
               }
+            }
 
             throw;
           }
+        }
       }
       catch
       {

@@ -445,7 +445,7 @@ namespace PdfiumViewer
     {
       Rectangle bounds = GetScrollClientArea();
       int maxWidth = (int) (_maxWidth * _scaleFactor) + ShadeBorder.Size.Horizontal + PageMargin.Horizontal;
-      int leftOffset = (HScroll ? DisplayRectangle.X : (bounds.Width - maxWidth) / 2) + maxWidth / 2;
+      int leftOffset = (HScroll ? DisplayRectangle.X : (bounds.Width - maxWidth) / 2) + (maxWidth / 2);
       int topOffset = VScroll ? DisplayRectangle.Y : 0;
 
       return new Size(leftOffset, topOffset);
@@ -492,6 +492,9 @@ namespace PdfiumViewer
       base.OnKeyDown(e);
     }
 
+    /// <summary>
+    ///   Select all text.
+    /// </summary>
     public void SelectAll()
     {
       _textSelectionState = new TextSelectionState
@@ -505,6 +508,9 @@ namespace PdfiumViewer
       Invalidate();
     }
 
+    /// <summary>
+    ///   Copy selected text to clipboard.
+    /// </summary>
     public void CopySelection()
     {
       string text = SelectedText;
@@ -519,9 +525,9 @@ namespace PdfiumViewer
     public void Load(IPdfDocument document)
     {
       if (document == null)
-        throw new ArgumentNullException("document");
+        throw new ArgumentNullException(nameof(document));
       if (document.PageCount == 0)
-        throw new ArgumentException("Document does not contain any pages", "document");
+        throw new ArgumentException("Document does not contain any pages", nameof(document));
 
       Document = document;
 
@@ -608,7 +614,7 @@ namespace PdfiumViewer
         int width = (int) (size.Width * _scaleFactor);
         int maxFullWidth = (int) (_maxWidth * _scaleFactor) + ShadeBorder.Size.Horizontal + PageMargin.Horizontal;
         int fullWidth = width + ShadeBorder.Size.Horizontal + PageMargin.Horizontal;
-        int thisLeftOffset = leftOffset + (maxFullWidth - fullWidth) / 2;
+        int thisLeftOffset = leftOffset + ((maxFullWidth - fullWidth) / 2);
 
         while (_pageCache.Count <= page) _pageCache.Add(new PageCache());
 
@@ -810,10 +816,12 @@ namespace PdfiumViewer
 
         Region region = null;
         foreach (PdfRectangle rectangle in Document.GetTextRectangles(page, start, end - start))
+        {
           if (region == null)
             region = new Region(BoundsFromPdf(rectangle));
           else
             region.Union(BoundsFromPdf(rectangle));
+        }
 
         if (region != null)
           graphics.FillRegion(_textSelectionBrush, region);
@@ -825,8 +833,10 @@ namespace PdfiumViewer
       PageCache pageCache = _pageCache[page];
 
       if (pageCache.Image == null)
+      {
         pageCache.Image = Document.Render(page, pageBounds.Width, pageBounds.Height, graphics.DpiX, graphics.DpiY,
           Rotation, PdfRenderFlags.Annotations);
+      }
 
       graphics.DrawImageUnscaled(pageCache.Image, pageBounds.Location);
     }
@@ -856,8 +866,8 @@ namespace PdfiumViewer
       }
 
       return new Rectangle(
-        center.X - width / 2,
-        center.Y - height / 2,
+        center.X - (width / 2),
+        center.Y - (height / 2),
         width,
         height
       );
@@ -983,6 +993,7 @@ namespace PdfiumViewer
         Page = e.Link.TargetPage.Value;
 
       if (e.Link.Uri != null)
+      {
         try
         {
           Process.Start(e.Link.Uri);
@@ -992,6 +1003,7 @@ namespace PdfiumViewer
           // Some browsers (Firefox) will cause an exception to
           // be thrown (when it auto-updates).
         }
+      }
     }
 
     private void HandleMouseDownForTextSelection(MouseEventArgs e)
@@ -1107,9 +1119,7 @@ namespace PdfiumViewer
     /// <param name="e">The event args.</param>
     protected virtual void OnLinkClick(LinkClickEventArgs e)
     {
-      LinkClickEventHandler handler = LinkClick;
-      if (handler != null)
-        handler(this, e);
+      LinkClick?.Invoke(this, e);
     }
 
     /// <summary>
@@ -1257,7 +1267,7 @@ namespace PdfiumViewer
       if (rectangle.Top < 0 || rectangle.Bottom > clientArea.Height)
       {
         Rectangle displayRectangle = DisplayRectangle;
-        int center = rectangle.Top + rectangle.Height / 2;
+        int center = rectangle.Top + (rectangle.Height / 2);
         int documentCenter = center - displayRectangle.Y;
         int displayCenter = clientArea.Height / 2;
         int offset = documentCenter - displayCenter;
@@ -1294,11 +1304,13 @@ namespace PdfiumViewer
         }
 
         foreach (PageCache pageCache in _pageCache)
+        {
           if (pageCache.Image != null)
           {
             pageCache.Image.Dispose();
             pageCache.Image = null;
           }
+        }
 
         _disposed = true;
       }
@@ -1352,7 +1364,8 @@ namespace PdfiumViewer
           return this;
 
         if (EndPage < StartPage ||
-            StartPage == EndPage && EndIndex < StartIndex)
+            (StartPage == EndPage && EndIndex < StartIndex))
+        {
           // End position is before start position.
           // Swap positions so start is always before end.
 
@@ -1363,6 +1376,7 @@ namespace PdfiumViewer
             EndPage = StartPage,
             EndIndex = StartIndex
           };
+        }
 
         return this;
       }

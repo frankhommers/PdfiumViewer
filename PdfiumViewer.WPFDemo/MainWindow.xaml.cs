@@ -51,7 +51,7 @@ namespace PdfiumViewer.WPFDemo
                   tokenSource.Token.ThrowIfCancellationRequested();
 
                   return RenderPageToMemDC(i, width, height);
-                }, tokenSource.Token);
+                }, tokenSource.Token).ConfigureAwait(false);
 
           labelMemDC.Content = string.Format("Renderd Pages: {0}, Memory: {1} MB, Time: {2:0.0} sec",
             i,
@@ -100,11 +100,9 @@ namespace PdfiumViewer.WPFDemo
 
     private void Window_Closed(object sender, EventArgs e)
     {
-      if (tokenSource != null)
-        tokenSource.Cancel();
+      tokenSource?.Cancel();
 
-      if (pdfDoc != null)
-        pdfDoc.Dispose();
+      pdfDoc?.Dispose();
     }
 
     private void DoSearch_Click(object sender, RoutedEventArgs e)
@@ -123,8 +121,7 @@ namespace PdfiumViewer.WPFDemo
 
       foreach (PdfMatch match in matches.Items)
         sb.AppendLine(
-          string.Format(
-            "Found \"{0}\" in page: {1}", match.Text, match.Page)
+          $"Found \"{match.Text}\" in page: {match.Page}"
         );
 
       searchResultLabel.Text = sb.ToString();

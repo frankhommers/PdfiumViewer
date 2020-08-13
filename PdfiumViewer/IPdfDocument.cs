@@ -290,6 +290,8 @@ namespace PdfiumViewer
     ///   Gets the rectangular areas occupied by a segment of text
     /// </summary>
     /// <param name="page">The page to get the rectangles from</param>
+    /// <param name="startIndex"></param>
+    /// <param name="count"></param>
     /// <returns>The rectangular areas occupied by a segment of text</returns>
     List<PdfRectangle> GetTextRectangles(int page, int startIndex, int count);
   }

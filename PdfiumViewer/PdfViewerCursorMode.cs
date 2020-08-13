@@ -2,7 +2,7 @@
 {
   public enum PdfViewerCursorMode
   {
-    Pan,
-    TextSelection
+    Pan = 0,
+    TextSelection = 1
   }
 }

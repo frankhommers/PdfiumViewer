@@ -2,8 +2,6 @@
 
 Apache 2.0 License.
 
-[Download from NuGet](http://nuget.org/packages/PdfiumViewer).
-
 ## Introduction
 
 PdfiumViewer is a PDF viewer based on the PDFium project.
@@ -19,10 +17,9 @@ PdfiumViewer provides a number of components to work with PDF files:
 
 ## Compatibility
 
-The PdfiumViewer library has been tested with Windows XP and Windows 8, and
-is fully compatible with both. However, the native PDFium libraries with V8
-support do not support Windows XP. See below for instructions on how to
-reference the native libraries.
+The PdfiumViewer library has been tested with Windows 10 and is fully compatible.
+However, the native PDFium libraries with V8 support do not support Windows XP.
+See below for instructions on how to reference the native libraries.
 
 ## Using the library
 
@@ -52,29 +49,3 @@ the `PdfViewer` control. Also, because people currently are already using the
 `PdfViewer` control, adding more functionality to this toolbar would be
 a breaking change. See [issue #41](https://github.com/pvginkel/PdfiumViewer/issues/41)
 for more information.
-
-## Building PDFium
-
-Instructions to build the PDFium library can be found on the [Building PDFium](https://github.com/pvginkel/PdfiumViewer/wiki/Building-PDFium)
-wiki page. However, if you are just looking to use the PdfiumViewer component
-or looking for a compiled version of PDFium, these steps are not required.
-NuGet packages with precompiled PDFium libraries are made available for
-usage with PdfiumViewer. See the chapter on **Using the library** for more
-information.
-
-Alternatively, the [PdfiumBuild](https://github.com/pvginkel/PdfiumBuild) project
-is provided to automate building PDFium. This project contains scripts to
-build PdfiumViewer specific versions of the PDFium library. This project
-is configured on a build server to compile PDFium daily. Please refer to
-the [PdfiumBuild](https://github.com/pvginkel/PdfiumBuild) project page
-for the location of the output of the build server. The PdfiumViewer specific
-libraries are located in the `PdfiumViewer-...` target directories.
-
-## Bugs
-
-Bugs should be reported through github at
-[http://github.com/pvginkel/PdfiumViewer/issues](http://github.com/pvginkel/PdfiumViewer/issues).
-
-## License
-
-PdfiumViewer is licensed under the Apache 2.0 license. See the license details for how PDFium is licensed.
