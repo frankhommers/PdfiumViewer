@@ -31,7 +31,7 @@ namespace PdfiumViewer.Demo
             cutMarginsWhenPrintingToolStripMenuItem.PerformClick();
 
             _zoom.Text = pdfViewer1.Renderer.Zoom.ToString();
-
+            _enableTextSelection_Click(null,EventArgs.Empty);
             Disposed += (s, e) => pdfViewer1.Document?.Dispose();
         }
 
@@ -395,5 +395,11 @@ namespace PdfiumViewer.Demo
         {
             copyToolStripMenuItem.Enabled = pdfViewer1.Renderer.IsTextSelected;
         }
+
+    private void _enableTextSelection_Click(object sender, EventArgs e)
+    {
+      pdfViewer1.Renderer.CursorMode =
+        _enableTextSelection.Checked ? PdfViewerCursorMode.TextSelection : PdfViewerCursorMode.Pan;
     }
+  }
 }

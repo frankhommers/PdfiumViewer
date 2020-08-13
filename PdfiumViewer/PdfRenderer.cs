@@ -447,7 +447,7 @@ namespace PdfiumViewer
 
         /// <summary>
         /// Called when the zoom level changes.
-        /// </summary>
+        /// </summary>%
         /// <param name="e">The event args.</param>
         protected override void OnZoomChanged(EventArgs e)
         {
